@@ -44,6 +44,21 @@ var TAB = {
         DISCOUNT:485,
         VAT:530,
         LAST: 560
+    },
+    TABLE_LANDSCAPE: {
+        INDEX: 50,
+        ORDERID:80,
+        DATE:140,
+        REFER:210,
+        TYPE:240,
+        SHIFT:350,
+        CASHIER:390,
+        GRANDTOTAL:430,
+        SERVICE:580,
+        ITEMDISCOUNT:620,
+        DISCOUNT:665,
+        VAT:710,
+        LAST: 740
     }
 
 }
