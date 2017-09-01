@@ -38,10 +38,10 @@ var TAB = {
         TYPE:230,
         SHIFT:270,
         CASHIER:310,
-        GRANDTOTAL:360,
-        SERVICE:440,
-        ITEMDISCOUNT:460,
-        DISCOUNT:480,
+        GRANDTOTAL:350,
+        SERVICE:400,
+        ITEMDISCOUNT:440,
+        DISCOUNT:485,
         VAT:530,
         LAST: 560
     }
