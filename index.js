@@ -19,7 +19,7 @@ var TEXT_SPACE_LOWER = 5,
     line_tick = 0.4, //default 0.8
     report_type = "รายงานบิลการขาย",
     header_table = ["No.", "OderId", "Date", "Table", "Type", "Shift", "Cashier", "GranTotal", "ServiceCharge", "Item    Discount", "Discount", "Vat"],
-    header_table_pointer = ["INDEX", "ORDERID", "DATE", "REFER", "TYPE", "SHIFT", "CASHIER", "GRANDTOTAL", "SERVICE", "ITEMDISCOUNT", "DISCOUNT", "VAT"]
+    header_table_pointer = ["INDEX", "ORDERID", "DATE", "REFER", "TYPE", "SHIFT", "CASHIER", "GRANDTOTAL", "SERVICE", "ITEMDISCOUNT", "DISCOUNT", "VAT"]//--fixcode
     ;
 
 //--style
@@ -30,12 +30,12 @@ var TEXT_padding = {
     SET_PAGE_LANDSCAPE = {
         layout: "landscape",
         autoFirstPage: false
-    }
-SET_HEADER_WIDTH =
-    {
-        width: 500,
-        align: 'left'
-    }
+    },//--fixcode
+    SET_HEADER_WIDTH =
+        {
+            width: 500,
+            align: 'left'
+        }//--fixcode
     ;
 
 //----------main---
@@ -134,7 +134,7 @@ function Report(pathPdf, data, shopname) {
                     width: C.TAB.TABLE_LANDSCAPE[header_table_pointer[index + 1]]
                     - C.TAB.TABLE_LANDSCAPE[header_table_pointer[index]] + TEXT_padding.right,
                     align: 'left'
-                })//--fixcode
+                })//--fix code
 
         })
 
@@ -164,7 +164,22 @@ function Report(pathPdf, data, shopname) {
         _.forEach(data, function (detail, index) {
             _.forEach(detail.Orders, function (record1, index1) {
 
+                if (((index1 + 1) % 2) == 1) {
+
+                    hilight = true
+                }
+
+                if (hilight) {
+                    addHilight(ROW_CURRENT, TEXT_SPACE);
+
+                    addTableLine(C.TAB.TABLE_LANDSCAPE
+                        .INDEX, ROW_CURRENT, C.TAB.TABLE_LANDSCAPE
+                            .LAST, ROW_CURRENT); //row line
+                }
+
+
                 addItem(record1, index1)
+
 
                 _.forEach(C.TAB.TABLE_LANDSCAPE
                     , function (value, key) {
@@ -175,49 +190,33 @@ function Report(pathPdf, data, shopname) {
 
                 if (record1.Note) {
 
+
+                    if (hilight) {
+                        addHilight(ROW_CURRENT, TEXT_SPACE_SMALL * lineCount(record1.Note));
+                    }
+
                     dailyReport.font('font_style_italic').fontSize(C.FONT.SIZE.SMALL).fillColor('#333333')
-                        .text("Remark: "+record1.Note, C.TAB.TABLE_LANDSCAPE.GRANDTOTAL + TEXT_padding.left, ROW_CURRENT + TEXT_SPACE_UPPER, {
+                        .text("Remark: " + record1.Note, C.TAB.TABLE_LANDSCAPE.GRANDTOTAL + TEXT_padding.left, ROW_CURRENT + TEXT_SPACE_UPPER, {
                             width: C.TAB.TABLE_LANDSCAPE.SERVICE - C.TAB.TABLE_LANDSCAPE.GRANDTOTAL,
                             align: 'left'
                         })
 
                     dailyReport.font('font_style_normal').fillColor('black');
 
-                    _.forEach(C.TAB.TABLE_LANDSCAPE
-                        , function (value, key) {
-                            addColumnLine(value);
-                        })
+                    //--dynamic remark newline
+                    for (var i = 0; i < lineCount(record1.Note); i++) {
+                        _.forEach(C.TAB.TABLE_LANDSCAPE
+                            , function (value, key) {
+                                addColumnLine(value);
+                            })
 
-
-                    NewLine(TEXT_SPACE)
-
-                    _.forEach(C.TAB.TABLE_LANDSCAPE
-                        , function (value, key) {
-                            addColumnLine(value);
-                        })
-
-                    NewLine(TEXT_SPACE_SMALL)   //--fix code
-
-                    _.forEach(C.TAB.TABLE_LANDSCAPE
-                        , function (value, key) {
-                            addColumnLine(value);
-                        })
-
-                    NewLine(TEXT_SPACE_SMALL)   //--fix code
-                    
-                    // _.forEach(C.TAB.TABLE_LANDSCAPE
-                    //     , function (value, key) {
-                    //         addColumnLine(value);
-                    //     })
-
-                    // NewLine(TEXT_SPACE_SMALL)   //--fix code
-
+                        NewLine(TEXT_SPACE_SMALL)
+                    }
 
 
                     addTableLine(C.TAB.TABLE_LANDSCAPE
                         .INDEX, ROW_CURRENT, C.TAB.TABLE_LANDSCAPE
                             .LAST, ROW_CURRENT); //row line
-
                 }
                 else {
 
@@ -226,6 +225,8 @@ function Report(pathPdf, data, shopname) {
                             .LAST, ROW_CURRENT); //row line
 
                 }
+
+                hilight = false
 
             })
 
@@ -260,11 +261,18 @@ function Report(pathPdf, data, shopname) {
 
     }
 
+    function lineCount(str) {
+        var remark_lenght = str.length * C.FONT.SIZE.SMALL
+        var grandtotal_width = C.TAB.TABLE_LANDSCAPE.SERVICE - C.TAB.TABLE_LANDSCAPE.GRANDTOTAL
+        var line_count = remark_lenght / grandtotal_width
+        return Number(line_count.toFixed(0))
+    }
+
     function addItem(record, index) {
 
 
         var t1 = "#" + record.OrderId,
-            gtt1 = numberWithCommas2(record.GrandTotal),
+            gtt1 = numberWithCommas2(record.GrandTotal.toFixed(2)),
             record_options = {
                 width: C.TAB.TABLE_LANDSCAPE[header_table_pointer[index + 1]]
                 - C.TAB.TABLE_LANDSCAPE[header_table_pointer[index]],
@@ -287,8 +295,8 @@ function Report(pathPdf, data, shopname) {
                 align: 'right'
             })
             .text(record.ServiceCharge, C.TAB.TABLE_LANDSCAPE.SERVICE + TEXT_padding.left, ROW_CURRENT + TEXT_SPACE_UPPER, record_options)
-            .text(record.ItemDiscount, C.TAB.TABLE_LANDSCAPE.ITEMDISCOUNT + TEXT_padding.left, ROW_CURRENT + TEXT_SPACE_UPPER, record_options)
-            .text(record.Discount, C.TAB.TABLE_LANDSCAPE.DISCOUNT + TEXT_padding.left, ROW_CURRENT + TEXT_SPACE_UPPER, record_options)
+            .text(record.ItemDiscount.toFixed(2), C.TAB.TABLE_LANDSCAPE.ITEMDISCOUNT + TEXT_padding.left, ROW_CURRENT + TEXT_SPACE_UPPER, record_options)
+            .text(record.Discount.toFixed(2), C.TAB.TABLE_LANDSCAPE.DISCOUNT + TEXT_padding.left, ROW_CURRENT + TEXT_SPACE_UPPER, record_options)
             .text(record.Vat, C.TAB.TABLE_LANDSCAPE.VAT + TEXT_padding.left, ROW_CURRENT + TEXT_SPACE_UPPER, record_options)
             ;
     }
@@ -338,22 +346,7 @@ function Report(pathPdf, data, shopname) {
         addTableLine(tab, ROW_CURRENT, tab, ROW_CURRENT + TEXT_SPACE);
     }
 
-    // function NewPage() {
-    //     dailyReport.addPage(C.PAGE_TYPE.MAGIN);
-    //     ROW_CURRENT = ROW_DEFAULT;
-    // }
-
     function addHilight(position, row_height) {
-
-        dailyReport.rect(C.TAB.TABLE_LANDSCAPE
-            .INDEX, position, (C.TAB.TABLE_LANDSCAPE
-                .LAST - C.TAB.TABLE_LANDSCAPE
-                    .INDEX), row_height).fill('#ddd');
-
-        dailyReport.fill('black');
-    }
-
-    function addHilightTopping(position, row_height) {
 
         dailyReport.rect(C.TAB.TABLE_LANDSCAPE
             .INDEX, position, (C.TAB.TABLE_LANDSCAPE.LAST - C.TAB.TABLE_LANDSCAPE.INDEX), row_height).fill('#ddd');
@@ -361,12 +354,11 @@ function Report(pathPdf, data, shopname) {
         dailyReport.fill('black');
     }
 
-
     function numberWithCommas(x) {
         return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
 
-    //--fixcode
+    //--fix code
     function numberWithCommas2(x) {
         var parts = x.toString().split(".");
         parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
