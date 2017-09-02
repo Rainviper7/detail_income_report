@@ -48,12 +48,12 @@ var TAB = {
     TABLE_LANDSCAPE: {
         INDEX: 50,
         ORDERID:80,
-        DATE:140,
+        DATE:130,
         REFER:210,
         TYPE:240,
         SHIFT:350,
         CASHIER:390,
-        GRANDTOTAL:430,
+        GRANDTOTAL:470,
         SERVICE:580,
         ITEMDISCOUNT:620,
         DISCOUNT:665,
@@ -62,9 +62,9 @@ var TAB = {
     }
 
 }
-
+//--HEIGHT portrait 790,landscape 610
 var PAGE_TYPE={
-        HEIGHT: 610,
+        HEIGHT: 520,
         MAGIN:{
             margins: 10,
             top: 10, bottom: 10, left: 50, right: 50

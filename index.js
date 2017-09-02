@@ -10,40 +10,49 @@ const _ = require('lodash'),
 //---------constant
 //---[610,790]
 var TEXT_SPACE_LOWER = 5,
+    TEXT_SPACE_UPPER = 1,
     TEXT_SPACE = C.FONT.SIZE.NORMAL + TEXT_SPACE_LOWER,
+    TEXT_SPACE_SMALL = C.FONT.SIZE.SMALL,
     ROW_CURRENT = C.ROW.DEFAULT,
     hilight = false,
     row_hilight = 0,
     line_tick = 0.4, //default 0.8
     report_type = "รายงานบิลการขาย",
-    header_table = ["No.", "OderId", "Date", "Table", "Type", "Shift", "Cashier", "GranTotal", "ServiceCharge", "Item    Discount", "Discount", "Vat"]
-header_table_pointer = ["INDEX", "ORDERID", "DATE", "REFER", "TYPE", "SHIFT", "CASHIER", "GRANDTOTAL", "SERVICE", "ITEMDISCOUNT", "DISCOUNT", "VAT"]
+    header_table = ["No.", "OderId", "Date", "Table", "Type", "Shift", "Cashier", "GranTotal", "ServiceCharge", "Item    Discount", "Discount", "Vat"],
+    header_table_pointer = ["INDEX", "ORDERID", "DATE", "REFER", "TYPE", "SHIFT", "CASHIER", "GRANDTOTAL", "SERVICE", "ITEMDISCOUNT", "DISCOUNT", "VAT"]
     ;
 
 //--style
 var TEXT_padding = {
     left: 5,
     right: -5
-}
+},
+    SET_PAGE_LANDSCAPE = {
+        layout: "landscape",
+        autoFirstPage: false
+    }
+SET_HEADER_WIDTH =
+    {
+        width: 500,
+        align: 'left'
+    }
     ;
 
 //----------main---
 function Report(pathPdf, data, shopname) {
-    var _path = pathPdf;
-    var _data = data;
+    var _path = pathPdf,
+        _data = data,
+        filename = _path,
+        data = _data
+        ;
 
-    var filename = _path;
-    var data = _data;
+    var dailyReport = new pdf;
 
-    var dailyReport = new pdf();
+    dailyReport.addPage(SET_PAGE_LANDSCAPE)
 
-    dailyReport.addPage({
-        layout: "landscape",
-        autoFirstPage: false
-    })
-
-    var now = new Date()
-    var datetime = moment(now).format("DD MMMM YYYY, HH:mm:ss");
+    var now = new Date(),
+        datetime = moment(now).format("DD MMMM YYYY, HH:mm:ss")
+        ;
 
     //----set font
     var fontpath = path.join(__dirname, 'fonts', 'ARIALUNI.ttf'),
@@ -63,6 +72,7 @@ function Report(pathPdf, data, shopname) {
     return {
         buildPdf: buildPdf
     }
+
     function buildPdf() {
 
         console.log("ExpensesReport module");
@@ -74,7 +84,6 @@ function Report(pathPdf, data, shopname) {
     //------------function
     function main() {
 
-
         dailyReport.pipe(fs.createWriteStream(filename));
 
         dailyReport.font('font_style_normal')
@@ -84,35 +93,22 @@ function Report(pathPdf, data, shopname) {
         dailyReport.end();
 
     }
+
     function drawHeader() {
 
         dailyReport.fontSize(C.FONT.SIZE.HEADER)
-            .text(shopname, C.TAB.TABLE_LANDSCAPE
-                .INDEX, ROW_CURRENT, {
-                width: C.TAB.TABLE_LANDSCAPE
-                    .QUANTITY - C.TAB.TABLE_LANDSCAPE
-                    .INDEX,
-                align: 'left'
-            });
+            .text(shopname, C.TAB.TABLE_LANDSCAPE.INDEX, ROW_CURRENT, SET_HEADER_WIDTH);
+
         NewLine(C.FONT.SIZE.HEADER + TEXT_SPACE_LOWER);
 
         dailyReport.fontSize(C.FONT.SIZE.HEADER)
-            .text(report_type, C.TAB.TABLE_LANDSCAPE
-                .INDEX, ROW_CURRENT, {
-                width: C.TAB.TABLE_LANDSCAPE
-                    .LAST - C.TAB.TABLE_LANDSCAPE
-                    .INDEX,
-                align: 'left'
-            });
+            .text(report_type, C.TAB.TABLE_LANDSCAPE.INDEX, ROW_CURRENT, SET_HEADER_WIDTH);
 
         NewLine(C.FONT.SIZE.HEADER + TEXT_SPACE);
 
         dailyReport.fontSize(C.FONT.SIZE.NORMAL).fillColor('#333333')
             .text("Generated at : " + datetime
-            , C.TAB.TABLE_LANDSCAPE.INDEX, ROW_CURRENT, {
-                width: C.TAB.TABLE_LANDSCAPE.QUANTITY - C.TAB.TABLE_LANDSCAPE.INDEX,
-                align: 'left'
-            });
+            , C.TAB.TABLE_LANDSCAPE.INDEX, ROW_CURRENT, SET_HEADER_WIDTH);
 
         dailyReport.fillColor('black');
 
@@ -134,8 +130,9 @@ function Report(pathPdf, data, shopname) {
         _.forEach(header_table_pointer, function (text, index) {
 
             dailyReport.font('font_style_bold').fontSize(C.FONT.SIZE.NORMAL)
-                .text(header_table[index], C.TAB.TABLE_LANDSCAPE[text] + TEXT_padding.left, ROW_CURRENT, {
-                    width: C.TAB.TABLE_LANDSCAPE[header_table_pointer[index + 1]] - C.TAB.TABLE_LANDSCAPE[header_table_pointer[index]] + TEXT_padding.right,
+                .text(header_table[index], C.TAB.TABLE_LANDSCAPE[text] + TEXT_padding.left, ROW_CURRENT + 2, {
+                    width: C.TAB.TABLE_LANDSCAPE[header_table_pointer[index + 1]]
+                    - C.TAB.TABLE_LANDSCAPE[header_table_pointer[index]] + TEXT_padding.right,
                     align: 'left'
                 })//--fixcode
 
@@ -174,10 +171,61 @@ function Report(pathPdf, data, shopname) {
                         addColumnLine(value);
                     })
 
-                addTableLine(C.TAB.TABLE_LANDSCAPE
-                    .INDEX, ROW_CURRENT, C.TAB.TABLE_LANDSCAPE
-                        .LAST, ROW_CURRENT); //row line
                 NewLine(TEXT_SPACE)
+
+                if (record1.Note) {
+
+                    dailyReport.font('font_style_italic').fontSize(C.FONT.SIZE.SMALL).fillColor('#333333')
+                        .text("Remark: "+record1.Note, C.TAB.TABLE_LANDSCAPE.GRANDTOTAL + TEXT_padding.left, ROW_CURRENT + TEXT_SPACE_UPPER, {
+                            width: C.TAB.TABLE_LANDSCAPE.SERVICE - C.TAB.TABLE_LANDSCAPE.GRANDTOTAL,
+                            align: 'left'
+                        })
+
+                    dailyReport.font('font_style_normal').fillColor('black');
+
+                    _.forEach(C.TAB.TABLE_LANDSCAPE
+                        , function (value, key) {
+                            addColumnLine(value);
+                        })
+
+
+                    NewLine(TEXT_SPACE)
+
+                    _.forEach(C.TAB.TABLE_LANDSCAPE
+                        , function (value, key) {
+                            addColumnLine(value);
+                        })
+
+                    NewLine(TEXT_SPACE_SMALL)   //--fix code
+
+                    _.forEach(C.TAB.TABLE_LANDSCAPE
+                        , function (value, key) {
+                            addColumnLine(value);
+                        })
+
+                    NewLine(TEXT_SPACE_SMALL)   //--fix code
+                    
+                    // _.forEach(C.TAB.TABLE_LANDSCAPE
+                    //     , function (value, key) {
+                    //         addColumnLine(value);
+                    //     })
+
+                    // NewLine(TEXT_SPACE_SMALL)   //--fix code
+
+
+
+                    addTableLine(C.TAB.TABLE_LANDSCAPE
+                        .INDEX, ROW_CURRENT, C.TAB.TABLE_LANDSCAPE
+                            .LAST, ROW_CURRENT); //row line
+
+                }
+                else {
+
+                    addTableLine(C.TAB.TABLE_LANDSCAPE
+                        .INDEX, ROW_CURRENT, C.TAB.TABLE_LANDSCAPE
+                            .LAST, ROW_CURRENT); //row line
+
+                }
 
             })
 
@@ -217,60 +265,54 @@ function Report(pathPdf, data, shopname) {
 
         var t1 = "#" + record.OrderId,
             gtt1 = numberWithCommas2(record.GrandTotal),
-            record_optins = {
+            record_options = {
+                width: C.TAB.TABLE_LANDSCAPE[header_table_pointer[index + 1]]
+                - C.TAB.TABLE_LANDSCAPE[header_table_pointer[index]],
                 align: 'left'
             };
 
         dailyReport.fontSize(C.FONT.SIZE.NORMAL)
-            .text(record.Id, C.TAB.TABLE_LANDSCAPE.INDEX + TEXT_padding.left, ROW_CURRENT, {
-                widht: C.TAB.TABLE_LANDSCAPE.ORDERID - C.TAB.TABLE_LANDSCAPE.INDEX,
+            .text(record.Id, C.TAB.TABLE_LANDSCAPE.INDEX + TEXT_padding.left, ROW_CURRENT + TEXT_SPACE_UPPER, record_options)
+            .text(t1, C.TAB.TABLE_LANDSCAPE.ORDERID + TEXT_padding.left, ROW_CURRENT + TEXT_SPACE_UPPER, record_options)
+            .text(moment(record.OrderDate).format("HH:mm:ss DD-MM"), C.TAB.TABLE_LANDSCAPE.DATE + TEXT_padding.left, ROW_CURRENT + TEXT_SPACE_UPPER, {
+                width: C.TAB.TABLE_LANDSCAPE.REFER - C.TAB.TABLE_LANDSCAPE.DATE,
                 align: 'left'
             })
-            .text(t1, C.TAB.TABLE_LANDSCAPE.ORDERID + TEXT_padding.left, ROW_CURRENT, record_optins)
-            .text(moment(record.OrderDate).format("HH:mm:ss DD-MM"), C.TAB.TABLE_LANDSCAPE.DATE + TEXT_padding.left, ROW_CURRENT, {
-                align: 'left'
-            })
-            .text(record.Table, C.TAB.TABLE_LANDSCAPE.REFER + TEXT_padding.left, ROW_CURRENT, record_optins)
-            .text(record.PaymentType, C.TAB.TABLE_LANDSCAPE.TYPE + TEXT_padding.left, ROW_CURRENT, record_optins)
-            .text(record.ShiftWork, C.TAB.TABLE_LANDSCAPE.SHIFT + TEXT_padding.left, ROW_CURRENT, record_optins)
-            .text(record.User, C.TAB.TABLE_LANDSCAPE.CASHIER + TEXT_padding.left, ROW_CURRENT, record_optins)
-            .text("฿ " + gtt1, C.TAB.TABLE_LANDSCAPE.GRANDTOTAL + TEXT_padding.right, ROW_CURRENT, {
+            .text(record.Table, C.TAB.TABLE_LANDSCAPE.REFER + TEXT_padding.left, ROW_CURRENT + TEXT_SPACE_UPPER, record_options)
+            .text(record.PaymentType, C.TAB.TABLE_LANDSCAPE.TYPE + TEXT_padding.left, ROW_CURRENT + TEXT_SPACE_UPPER, record_options)
+            .text(record.ShiftWork, C.TAB.TABLE_LANDSCAPE.SHIFT + TEXT_padding.left, ROW_CURRENT + TEXT_SPACE_UPPER, record_options)
+            .text(record.User, C.TAB.TABLE_LANDSCAPE.CASHIER + TEXT_padding.left, ROW_CURRENT + TEXT_SPACE_UPPER, record_options)
+            .text("฿ " + gtt1, C.TAB.TABLE_LANDSCAPE.GRANDTOTAL + TEXT_padding.right, ROW_CURRENT + TEXT_SPACE_UPPER, {
                 width: C.TAB.TABLE_LANDSCAPE.SERVICE - C.TAB.TABLE_LANDSCAPE.GRANDTOTAL,
                 align: 'right'
             })
-            .text(record.ServiceCharge, C.TAB.TABLE_LANDSCAPE.SERVICE + TEXT_padding.left, ROW_CURRENT, {
-                width: C.TAB.TABLE_LANDSCAPE.ITEMDISCOUNT - C.TAB.TABLE_LANDSCAPE.SERVICE,
-                align: 'left'
-            })
-            .text(record.ItemDiscount, C.TAB.TABLE_LANDSCAPE.ITEMDISCOUNT + TEXT_padding.left, ROW_CURRENT, {
-                width: C.TAB.TABLE_LANDSCAPE.DISCOUNT - C.TAB.TABLE_LANDSCAPE.ITEMDISCOUNT,
-                align: 'left'
-            })
-            .text(record.Discount, C.TAB.TABLE_LANDSCAPE.DISCOUNT + TEXT_padding.left, ROW_CURRENT, {
-                width: C.TAB.TABLE_LANDSCAPE.VAT - C.TAB.TABLE_LANDSCAPE.DISCOUNT,
-                align: 'left'
-            })
-            .text(record.Vat, C.TAB.TABLE_LANDSCAPE.VAT + TEXT_padding.left, ROW_CURRENT, {
-                width: C.TAB.TABLE_LANDSCAPE.LAST - C.TAB.TABLE_LANDSCAPE.VAT,
-                align: 'left'
-            })
+            .text(record.ServiceCharge, C.TAB.TABLE_LANDSCAPE.SERVICE + TEXT_padding.left, ROW_CURRENT + TEXT_SPACE_UPPER, record_options)
+            .text(record.ItemDiscount, C.TAB.TABLE_LANDSCAPE.ITEMDISCOUNT + TEXT_padding.left, ROW_CURRENT + TEXT_SPACE_UPPER, record_options)
+            .text(record.Discount, C.TAB.TABLE_LANDSCAPE.DISCOUNT + TEXT_padding.left, ROW_CURRENT + TEXT_SPACE_UPPER, record_options)
+            .text(record.Vat, C.TAB.TABLE_LANDSCAPE.VAT + TEXT_padding.left, ROW_CURRENT + TEXT_SPACE_UPPER, record_options)
             ;
+    }
 
+    function addRemark(record, index) {
+        dailyReport.font('font_style_italic').fontSize(C.FONT.SIZE.SMALL).fillColor('#333333')
+            .text(record.Note, C.TAB.TABLE_LANDSCAPE.GRANDTOTAL + TEXT_padding.right, ROW_CURRENT + TEXT_SPACE_UPPER, {
+                width: C.TAB.TABLE_LANDSCAPE.SERVICE - C.TAB.TABLE_LANDSCAPE.GRANDTOTAL,
+                align: 'left'
+            })
 
-
-
+        dailyReport.font('font_style_normal').fillColor('black');
     }
 
     function checkPositionOutsideArea() {
 
         if (ROW_CURRENT > C.PAGE_TYPE.HEIGHT) {
 
-            dailyReport.addPage();
+            dailyReport.addPage(SET_PAGE_LANDSCAPE);
             ROW_CURRENT = C.ROW.DEFAULT;
 
             if (hilight == true) {
 
-                row_hilight = ROW_DEFAULT;
+                row_hilight = C.ROW.DEFAULT;
 
             }
 
@@ -289,17 +331,17 @@ function Report(pathPdf, data, shopname) {
 
     function NewLine(px) {
         ROW_CURRENT += px;
-        // checkPositionOutsideArea()
+        checkPositionOutsideArea()
     }
 
     function addColumnLine(tab) {
         addTableLine(tab, ROW_CURRENT, tab, ROW_CURRENT + TEXT_SPACE);
     }
 
-    function NewPage() {
-        dailyReport.addPage(C.PAGE_TYPE.MAGIN);
-        ROW_CURRENT = ROW_DEFAULT;
-    }
+    // function NewPage() {
+    //     dailyReport.addPage(C.PAGE_TYPE.MAGIN);
+    //     ROW_CURRENT = ROW_DEFAULT;
+    // }
 
     function addHilight(position, row_height) {
 
